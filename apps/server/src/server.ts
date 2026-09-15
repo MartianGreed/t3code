@@ -66,6 +66,8 @@ import * as TextGeneration from "./textGeneration/TextGeneration.ts";
 import { ProviderInstanceRegistryHydrationLive } from "./provider/Layers/ProviderInstanceRegistryHydration.ts";
 import * as TerminalManager from "./terminal/Manager.ts";
 import * as McpHttpServer from "./mcp/McpHttpServer.ts";
+import * as ExosIntegration from "./exos/ExosIntegration.ts";
+import * as ExosCaptureReactor from "./exos/ExosCaptureReactor.ts";
 import * as McpSessionRegistry from "./mcp/McpSessionRegistry.ts";
 import * as PreviewAutomationBroker from "./mcp/PreviewAutomationBroker.ts";
 import * as DeviceService from "./device/DeviceService.ts";
@@ -241,8 +243,14 @@ const HttpServerLive = Layer.unwrap(
 
 const PlatformServicesLive = NodeServices.layer;
 
+const ExosIntegrationLive = ExosIntegration.layer.pipe(
+  Layer.provide(T3ProjectFileLoader.layer),
+  Layer.provide(ProcessRunner.layer),
+);
+
 const ReactorLayerLive = Layer.empty.pipe(
   Layer.provideMerge(OrchestrationReactorLive),
+  Layer.provideMerge(ExosCaptureReactor.layer),
   Layer.provideMerge(ProviderRuntimeIngestionLive),
   Layer.provideMerge(ProviderCommandReactorLive),
   Layer.provideMerge(CheckpointReactorLive),
@@ -483,6 +491,7 @@ const RuntimeCoreDependenciesLive = ReactorLayerLive.pipe(
   Layer.provideMerge(AntigravityInstallationRefreshLive),
   Layer.provideMerge(ProviderAuthServiceLive),
   // Core Services
+  Layer.provideMerge(ExosIntegrationLive),
   Layer.provideMerge(ServerSettingsLayerLive),
   Layer.provideMerge(CheckpointingLayerLive),
   Layer.provideMerge(
@@ -585,6 +594,7 @@ export const makeRoutesLayer = Layer.mergeAll(
   // and mutations observed on WebSocket invalidate patches subsequently read over HTTP.
   Layer.provide(PullRequestServiceLive),
   Layer.provide(PreviewAutomationBroker.layer),
+  Layer.provide(ExosIntegrationLive),
   Layer.provide(ServerSelfUpdate.layer.pipe(Layer.provide(DesktopAppUpdateLayerLive))),
   Layer.provide(commandReadinessLayer),
   Layer.provide(browserApiCorsLayer),

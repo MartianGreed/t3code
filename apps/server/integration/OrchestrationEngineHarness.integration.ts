@@ -1,3 +1,4 @@
+import { ExosCaptureReactor } from "../src/exos/ExosCaptureReactor.ts";
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeChildProcess from "node:child_process";
 
@@ -384,6 +385,12 @@ export const makeOrchestrationIntegrationHarness = (
       Layer.provideMerge(VcsProcess.layer),
     );
     const orchestrationReactorLayer = OrchestrationReactorLive.pipe(
+      Layer.provide(
+        Layer.succeed(ExosCaptureReactor, {
+          start: () => Effect.void,
+          drainThrough: () => Effect.void,
+        }),
+      ),
       Layer.provideMerge(runtimeIngestionLayer),
       Layer.provideMerge(providerCommandReactorLayer),
       Layer.provideMerge(checkpointReactorLayer),

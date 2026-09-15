@@ -1,3 +1,4 @@
+import { ExosCaptureReactor } from "../../exos/ExosCaptureReactor.ts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
@@ -31,6 +32,15 @@ describe("OrchestrationReactor", () => {
 
     runtime = ManagedRuntime.make(
       Layer.effect(OrchestrationReactor, makeOrchestrationReactor).pipe(
+        Layer.provide(
+          Layer.succeed(ExosCaptureReactor, {
+            start: () => {
+              started.push("exos-capture-reactor");
+              return Effect.void;
+            },
+            drainThrough: () => Effect.void,
+          }),
+        ),
         Layer.provideMerge(
           Layer.succeed(ProviderRuntimeIngestionService, {
             start: () => {
@@ -120,6 +130,7 @@ describe("OrchestrationReactor", () => {
       "thread-settlement-reactor",
       "pull-request-sync-reactor",
       "agent-awareness-relay",
+      "exos-capture-reactor",
     ]);
 
     await Effect.runPromise(Scope.close(scope, Exit.void));
