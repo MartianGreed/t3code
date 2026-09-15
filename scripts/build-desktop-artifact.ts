@@ -2566,8 +2566,8 @@ export function resolveDesktopUpdateChannel(version: string): "latest" | "nightl
 
 // Pull request builds (`-pr.<n>.`) and the maintainers' preview train
 // (`-preview.<date>.<run>`) are downloaded by hand and never through an
-// updater. Building them without a publish config means electron-builder
-// emits no `latest*.yml`/`nightly*.yml` manifests or blockmaps for them and
+// updater. Explicitly disabling publish discovery means electron-builder
+// emits no `latest*.yml`/`nightly*.yml` manifests for them and
 // the app ships without `app-update.yml`, so neither a stable nor a nightly
 // install can be pointed at one of these releases, and the build itself
 // reports that no update feed is configured instead of polling.
@@ -2639,6 +2639,9 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
 ) {
   const buildConfig: Record<string, unknown> = {
     appId: DESKTOP_APP_ID,
+    // Omission enables electron-builder's repository/token auto-detection, even
+    // with --publish never. Local and preview builds must opt out explicitly.
+    publish: null,
     productName: resolveDesktopProductName(version),
     artifactName: "T3-Code-${version}-${arch}.${ext}",
     electronLanguages: [...DESKTOP_ELECTRON_LANGUAGES],
