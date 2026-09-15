@@ -41,6 +41,50 @@ on each selected environment, and reset returns to the environment's shared list
 For workspace mode, a project's `t3.json` preference applies when the project has no override.
 Browser access changes apply when an agent session next starts.
 
+## Exos workstreams
+
+To connect a project to Exos, install the `exos` CLI and sign in on the machine running
+the T3 server. Add a project link to the repository's `t3.json`:
+
+```json
+{
+  "exos": {
+    "project": "demo",
+    "repository": "../demo-os",
+    "skillsDirectory": "../exos/plugin/skills"
+  }
+}
+```
+
+The repository must be the project's OS clone, with a matching `project` in its
+`manifest.yaml`. Paths are relative to the T3 project's root, or absolute paths on
+the server. For remote connections, these are server paths. `skillsDirectory` is
+optional and points at your installed Exos skills. T3 reads those files when asked,
+so updating the installed skills updates what agents can discover.
+
+Start a Claude or Codex session and ask it to run `exos_status`. The tools are supplied
+by T3 automatically. Ask the agent to use `exos_list_skills` and `exos_read_skill` to
+load a workflow. Project context is loaded only when requested.
+
+Choose an existing workstream and a role, then ask the agent to bind the thread with
+`exos_bind_workstream`. T3 registers the thread with Exos and captures its conversation
+after completed messages and session changes. Registration failures remain visible
+in `exos_status`; fix the CLI login or workstream state and run `exos_sync` to retry.
+Pending registrations and captures recover when the T3 server restarts.
+
+Captures stay in private files under T3's `userdata/exos/captures`, outside the OS
+repository. Each export is limited to 16 MiB; if a transcript exceeds the limit,
+T3 keeps the previous export and reports the failure. Archive a capture with the
+Exos archive-session skill using `source: other` and its real T3 thread ID. These
+exports do not provide Exos's native Clave or Claude telemetry ingestion.
+
+Use `exos_detach_workstream` to stop capture for a thread, or remove the `exos` entry
+to disable the project integration. Binding again to the same workstream and role
+resumes capture. Use a new thread for another assignment. Detaching retains captures
+and the hub's session history; it never closes workstreams, completes tasks, or
+merges code. Clave-specific UI and coordination actions still require a corresponding
+tool in the current session.
+
 ## Project icons
 
 Select the project and open Project to choose an icon, emoji, or image. The choice applies to

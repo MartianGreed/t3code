@@ -34,6 +34,7 @@ describe("buildT3ProjectFileJsonSchema", () => {
     expect(Object.keys(schema.properties).sort()).toEqual([
       "$schema",
       "defaultThreadEnvMode",
+      "exos",
       "iconPath",
       "scripts",
     ]);
@@ -80,6 +81,18 @@ describe("T3ProjectFileFromJson", () => {
 });
 
 describe("parseT3ProjectFile", () => {
+  it("retains an Exos project link and rejects unsafe project identifiers", () => {
+    const exos = {
+      project: "demo",
+      repository: "../demo-os",
+      skillsDirectory: "../exos/plugin/skills",
+    };
+    expect(parseT3ProjectFile(JSON.stringify({ exos }))).toEqual({ exos });
+    expect(
+      parseT3ProjectFile(JSON.stringify({ exos: { ...exos, project: "../other" } })),
+    ).toBeNull();
+  });
+
   it("returns the decoded file for valid contents", () => {
     expect(parseT3ProjectFile('{ "defaultThreadEnvMode": "worktree" }')).toEqual({
       defaultThreadEnvMode: "worktree",

@@ -65,7 +65,27 @@ export const T3ProjectFileScript = Schema.Struct({
 });
 export type T3ProjectFileScript = typeof T3ProjectFileScript.Type;
 
+export const T3ExosProject = Schema.Struct({
+  project: Schema.String.check(Schema.isPattern(/^[a-z0-9][a-z0-9-]{0,99}$/)),
+  repository: trimmedNonEmpty({
+    description:
+      "Path to the project OS clone on the T3 server, relative to this project root or absolute.",
+  }),
+  skillsDirectory: Schema.optionalKey(
+    trimmedNonEmpty({
+      description:
+        "Path to installed Exos skills on the T3 server, relative to this project root or absolute.",
+    }),
+  ),
+});
+
 export const T3ProjectFile = Schema.Struct({
+  exos: Schema.optionalKey(
+    T3ExosProject.annotate({
+      description:
+        "Opt into Exos tools for this project. Removing this link stops automatic capture and registration.",
+    }),
+  ),
   $schema: Schema.optionalKey(
     Schema.String.annotate({
       description: `URL of the JSON Schema for this file, typically "${T3_PROJECT_FILE_SCHEMA_URL}".`,
