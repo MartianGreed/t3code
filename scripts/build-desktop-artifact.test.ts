@@ -318,7 +318,41 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
     }),
   );
 
-  it.effect("omits update feeds for pull request preview builds", () =>
+  it.effect("disables update discovery for local builds without a release repository", () =>
+    Effect.gen(function* () {
+      for (const repository of ["", "invalid", "owner/repo/extra"]) {
+        const config = yield* createBuildConfig(
+          "mac",
+          "dmg",
+          "0.0.40",
+          false,
+          false,
+          undefined,
+          undefined,
+        ).pipe(
+          Effect.provide(
+            ConfigProvider.layer(
+              ConfigProvider.fromEnv({
+                env: { T3CODE_DESKTOP_UPDATE_REPOSITORY: repository },
+              }),
+            ),
+          ),
+        );
+        assert.isNull(config.publish);
+      }
+    }),
+  );
+
+  it.effect("keeps the configured mock update feed for local builds", () =>
+    Effect.gen(function* () {
+      const config = yield* createBuildConfig("mac", "dmg", "0.0.40", false, true, 4321, undefined);
+      assert.deepStrictEqual(config.publish, [
+        { provider: "generic", url: "http://localhost:4321" },
+      ]);
+    }).pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} })))),
+  );
+
+  it.effect("disables update discovery for preview builds even with a release repository", () =>
     Effect.gen(function* () {
       const preview = yield* createBuildConfig(
         "mac",
@@ -349,8 +383,8 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
         undefined,
       );
 
-      assert.notProperty(preview, "publish");
-      assert.notProperty(previewChannel, "publish");
+      assert.isNull(preview.publish);
+      assert.isNull(previewChannel.publish);
       assert.deepStrictEqual(release.publish, [
         {
           provider: "github",
